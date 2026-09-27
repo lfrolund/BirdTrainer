@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BirdTrainer</title>
+  <meta name="description" content="Practise identifying birds by photo and sound using iNaturalist observations.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐦</text></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1><span aria-hidden="true">🐦</span> BirdTrainer</h1>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-view="setup" role="tab">Setup</button>
+      <button class="tab" data-view="quiz" role="tab" disabled>Quiz</button>
+      <button class="tab" data-view="species" role="tab" disabled>Species</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ================= SETUP ================= -->
+    <section id="view-setup" class="view active">
+      <div class="card">
+        <h2>Where?</h2>
+        <p class="muted">Only birds observed in these places. Leave empty for anywhere in the world.</p>
+        <div class="picker" id="place-picker">
+          <div class="chips" id="place-chips"></div>
+          <input type="search" id="place-input" placeholder="Search places, e.g. California" autocomplete="off">
+          <ul class="suggestions" id="place-suggestions" hidden></ul>
+        </div>
+
+        <h3>When?</h3>
+        <p class="muted">Optionally limit to observations from certain months.</p>
+        <div class="months" id="months"></div>
+        <div class="row gap-s">
+          <button class="link-btn" id="months-now">This time of year</button>
+          <button class="link-btn" id="months-clear">Any month</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Which birds?</h2>
+        <p class="muted">Add families, genera, species, or informal groups like “gulls”. Leave empty for all birds.</p>
+        <div class="picker" id="taxon-picker">
+          <div class="chips" id="include-chips"></div>
+          <input type="search" id="taxon-input" placeholder="Search e.g. gulls, Laridae, Empidonax, warblers" autocomplete="off">
+          <ul class="suggestions" id="taxon-suggestions" hidden></ul>
+        </div>
+
+        <details class="group-browser">
+          <summary>Browse groups</summary>
+          <div class="group-list" id="group-list"></div>
+          <button class="secondary" id="new-group-btn">+ Create your own group</button>
+        </details>
+
+        <h3>Exclude</h3>
+        <div class="picker" id="exclude-picker">
+          <div class="chips" id="exclude-chips"></div>
+          <input type="search" id="exclude-input" placeholder="Optional: taxa to leave out" autocomplete="off">
+          <ul class="suggestions" id="exclude-suggestions" hidden></ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>How?</h2>
+        <div class="options-grid">
+          <label>Media
+            <select id="opt-media">
+              <option value="photo">Photos</option>
+              <option value="sound">Sounds</option>
+              <option value="mixed">Photos and sounds</option>
+            </select>
+          </label>
+          <label>Species to include
+            <select id="opt-pool">
+              <option value="25">25 most observed</option>
+              <option value="50">50 most observed</option>
+              <option value="100">100 most observed</option>
+              <option value="200">200 most observed</option>
+              <option value="500">Up to 500</option>
+            </select>
+          </label>
+          <label>Answer by
+            <select id="opt-answer">
+              <option value="2">2 choices</option>
+              <option value="4">4 choices</option>
+              <option value="6">6 choices</option>
+              <option value="8">8 choices</option>
+              <option value="type">Typing the name</option>
+            </select>
+          </label>
+          <label>Wrong choices are
+            <select id="opt-difficulty">
+              <option value="similar">Similar birds (harder)</option>
+              <option value="random">Random birds (easier)</option>
+            </select>
+          </label>
+          <label>Observations
+            <select id="opt-quality">
+              <option value="research">Research grade only</option>
+              <option value="research,needs_id">Include “needs ID”</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="start-row">
+        <p id="setup-error" class="error" role="alert" hidden></p>
+        <button class="primary big" id="start-btn">Start training</button>
+      </div>
+    </section>
+
+    <!-- ================= QUIZ ================= -->
+    <section id="view-quiz" class="view">
+      <div class="scorebar">
+        <span id="score">0 / 0</span>
+        <span id="streak"></span>
+        <span class="muted" id="pool-info"></span>
+      </div>
+
+      <div class="card quiz-card">
+        <div class="stage" id="stage">
+          <div class="loading" id="stage-loading">Loading…</div>
+        </div>
+        <div class="stage-nav" id="stage-nav" hidden>
+          <button class="icon-btn" id="prev-media" aria-label="Previous">‹</button>
+          <span id="media-counter"></span>
+          <button class="icon-btn" id="next-media" aria-label="Next">›</button>
+        </div>
+        <p class="attribution" id="attribution"></p>
+
+        <div class="hints">
+          <div class="hint-buttons" id="hint-buttons"></div>
+          <ul class="hint-list" id="hint-list"></ul>
+        </div>
+
+        <div class="answer" id="answer-area"></div>
+
+        <div class="reveal" id="reveal" hidden></div>
+      </div>
+      <p class="muted small center">Keys: <kbd>1</kbd>–<kbd>8</kbd> answer · <kbd>←</kbd>/<kbd>→</kbd> media · <kbd>Space</kbd> play/pause sound · <kbd>Enter</kbd> next</p>
+    </section>
+
+    <!-- ================= SPECIES ================= -->
+    <section id="view-species" class="view">
+      <div class="row between">
+        <p class="muted" id="species-summary"></p>
+        <button class="link-btn" id="reset-stats">Reset my stats</button>
+      </div>
+      <div class="species-grid" id="species-grid"></div>
+    </section>
+  </main>
+
+  <dialog id="group-dialog">
+    <form method="dialog" id="group-form">
+      <h2>Create a group</h2>
+      <label>Name <input id="group-name" required placeholder="e.g. Peeps"></label>
+      <div class="picker" id="group-picker">
+        <div class="chips" id="group-chips"></div>
+        <input type="search" id="group-input" placeholder="Add taxa (any rank)" autocomplete="off">
+        <ul class="suggestions" id="group-suggestions" hidden></ul>
+      </div>
+      <div class="row end gap-s">
+        <button value="cancel" class="secondary" formnovalidate>Cancel</button>
+        <button value="save" class="primary" id="group-save">Save group</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer>
+    Photos, sounds and data from <a href="https://www.inaturalist.org" target="_blank" rel="noopener">iNaturalist</a>, used under each observer's license.
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
